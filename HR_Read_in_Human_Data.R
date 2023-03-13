@@ -869,3 +869,124 @@ cat(paste('\n\n',i,' done normalization','\n\n',sep=''))
 save(HSatlasNormDat,file='./SeuratObj/HSatlasSamples_PostSCT.rda',compress=TRUE)
 
 write.csv(HSatlasCellTracking,file='./SeuratObj/HSatlas_CellCounts.csv')
+
+
+Zhou_data = Read10X(data.dir = "/local/projects-t3/idea/bherb/Hypothalamus/Zhou/Zhou2022_GSE169109")  ## original counts from group
+
+#/local/projects-t3/idea/bherb/Hypothalamus - #just GW11? from 2020 paper 
+
+## split by sample 
+
+ZhouSamples=c('GW7_Lane1','GW7_Lane2','GW8_1','GW8_2','GW10','GW12_01','GW12_02','GW15_A','GW15_M','GW15_P','GW18_A','GW18_M','GW18_P','GW18_Lane1','GW18_Lane2','GW18_Lane3','GW20_A','GW20_M','GW20_P')
+
+ZhouRawDat = vector('list',length=length(Samples))
+
+names(ZhouRawDat) = ZhouSamples
+
+ind = flexsplit(colnames(Zhou_data),'-')[,2]
+
+for(i in 1:length(Samples)){
+ZhouRawDat[[i]] = Zhou_data[,ind==i]
+cat(i)
+}
+
+#ZhouRawDat = list(CS13_data,CS14_data,CS15_data,CS22_hypo_data,CS22_2_hypo_data,GW16_hypo_data,GW18_hypo_data,GW19_hypo_data,GW20_34_hypo_data,GW22T_hypo1_data,GW25_3V_hypo_data)
+
+names(ZhouRawDat) = ZhouSamples
+
+ZhouCellTracking = data.frame(sample=ZhouSamples,Raw=0,AfterCutoffs=0,AfterDoublets=0)
+rownames(ZhouCellTracking) = ZhouSamples
+
+ZhouDat = vector(mode='list',length=length(ZhouSamples))
+names(ZhouDat) = ZhouSamples
+ZhouNormDat = vector(mode='list',length=length(ZhouSamples))
+names(ZhouNormDat) = ZhouSamples
+
+
+setwd("/local/projects-t3/idea/bherb/Hypothalamus/Zhou/")
+
+for(i in ZhouSamples){
+
+ZhouDat[[i]] <- CreateSeuratObject(counts = ZhouRawDat[[i]])
+ZhouCellTracking[i,'Raw'] = ncol(ZhouDat[[i]])
+ZhouDat[[i]]@meta.data$sample=i
+ZhouDat[[i]] = RenameCells(ZhouDat[[i]],add.cell.id=i)
+ZhouDat[[i]] <- PercentageFeatureSet(ZhouDat[[i]], pattern = "^MT-", col.name = "percent.mt")
+## QC plots
+pdf(file=paste("./TestPlots/",i,"_all_QC.pdf",sep=''),width=12,height=8)
+print(VlnPlot(ZhouDat[[i]], features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+)
+print(FeatureScatter(ZhouDat[[i]], feature1 = "nCount_RNA", feature2 = "percent.mt"))
+print(FeatureScatter(ZhouDat[[i]], feature1 = "nCount_RNA", feature2 = "nFeature_RNA"))
+dev.off()
+ZhouNormDat[[i]] = subset(ZhouDat[[i]], subset = nFeature_RNA > 200 & nFeature_RNA < 4000 & nCount_RNA > 1000& nCount_RNA < 15000 & percent.mt < 20)
+ZhouCellTracking[i,'AfterCutoffs'] = ncol(ZhouNormDat[[i]])
+if(ncol(ZhouNormDat[[i]])<100) next
+ZhouNormDat[[i]] <- SCTransform(ZhouNormDat[[i]], vars.to.regress = "percent.mt", verbose = FALSE)
+ZhouNormDat[[i]] <- RunPCA(ZhouNormDat[[i]], verbose = FALSE)
+ZhouNormDat[[i]] <- RunUMAP(ZhouNormDat[[i]], dims = 1:50, verbose = FALSE)
+ZhouNormDat[[i]] <- FindNeighbors(ZhouNormDat[[i]], dims = 1:50, verbose = FALSE)
+ZhouNormDat[[i]] <- FindClusters(ZhouNormDat[[i]], verbose = FALSE, resolution=0.5)
+
+DefaultAssay(ZhouNormDat[[i]]) = 'RNA'
+
+pdf(file=paste("./TestPlots/",i,"_Check_Cluster_PreDupRm.pdf",sep=''),width=12,height=8)
+print(DimPlot(ZhouNormDat[[i]], reduction = "umap", group.by = "seurat_clusters", label = TRUE, repel = TRUE))
+print(FeaturePlot(ZhouNormDat[[i]], features = c("LRTOMT","AGT"), pt.size = 0.2, ncol = 2))
+print(FeaturePlot(ZhouNormDat[[i]], features = c("FREM2","FZD2"), pt.size = 0.2, ncol = 2) )
+print(FeaturePlot(ZhouNormDat[[i]], features = c("COL1A1","PDGFRB"), pt.size = 0.2, ncol = 2))
+print(FeaturePlot(ZhouNormDat[[i]], features = c("CLDN5","CX3CR1"), pt.size = 0.2, ncol = 2))
+print(FeaturePlot(ZhouNormDat[[i]], features = c("VIM","STMN2"), pt.size = 0.2, ncol = 2))
+print(FeaturePlot(ZhouNormDat[[i]], features = c("AQP4","CCDC153"), pt.size = 0.2, ncol = 2))
+print(FeaturePlot(ZhouNormDat[[i]], features = c("SLC44A1","GPR17"), pt.size = 0.2, ncol = 2))
+print(FeaturePlot(ZhouNormDat[[i]], features = c("C1QB","HEXB"), pt.size = 0.2, ncol = 2))
+print(FeaturePlot(ZhouNormDat[[i]], features = c("SLC17A6","GAD1"), pt.size = 0.2, ncol = 2))
+print(FeaturePlot(ZhouNormDat[[i]], features = c("PDGFRA","MBP"), pt.size = 0.2, ncol = 2))
+dev.off()
+
+## doublet id and removal -  
+DefaultAssay(ZhouNormDat[[i]]) = 'SCT'
+Seurat_Object_Diet <- DietSeurat(ZhouNormDat[[i]], graphs = "pca")
+TMPsce <- as.SingleCellExperiment(Seurat_Object_Diet)
+#TMPsce = as.SingleCellExperiment(ZhouNormDat[[i]])
+TMPsce <- scDblFinder(TMPsce)
+ZhouNormDat[[i]]@meta.data$scDblFinder = colData(TMPsce)$scDblFinder.class
+ZhouNormDat[[i]] = subset(ZhouDat[[i]],cells = colnames(ZhouNormDat[[i]])[which(ZhouNormDat[[i]]@meta.data$scDblFinder=='singlet')]) #7894
+ZhouCellTracking[i,'AfterDoublets'] = ncol(ZhouNormDat[[i]])
+if(ncol(ZhouNormDat[[i]])<100) next
+ZhouNormDat[[i]] <- SCTransform(ZhouNormDat[[i]], vars.to.regress = "percent.mt", verbose = FALSE)
+ZhouNormDat[[i]] <- RunPCA(ZhouNormDat[[i]], verbose = FALSE)
+ZhouNormDat[[i]] <- RunUMAP(ZhouNormDat[[i]], dims = 1:50, verbose = FALSE)
+ZhouNormDat[[i]] <- FindNeighbors(ZhouNormDat[[i]], dims = 1:50, verbose = FALSE)
+ZhouNormDat[[i]] <- FindClusters(ZhouNormDat[[i]], verbose = FALSE, resolution=0.5)
+
+pdf(file=paste("./TestPlots/",i,"_Check_Cluster_PostDupRm.pdf",sep=''),width=12,height=8)
+print(DimPlot(ZhouNormDat[[i]], reduction = "umap", group.by = "seurat_clusters", label = TRUE, repel = TRUE))
+print(FeaturePlot(ZhouNormDat[[i]], features = c("LRTOMT","AGT"), pt.size = 0.2, ncol = 2))
+print(FeaturePlot(ZhouNormDat[[i]], features = c("FREM2","FZD2"), pt.size = 0.2, ncol = 2) )
+print(FeaturePlot(ZhouNormDat[[i]], features = c("COL1A1","PDGFRB"), pt.size = 0.2, ncol = 2))
+print(FeaturePlot(ZhouNormDat[[i]], features = c("CLDN5","CX3CR1"), pt.size = 0.2, ncol = 2))
+print(FeaturePlot(ZhouNormDat[[i]], features = c("VIM","STMN2"), pt.size = 0.2, ncol = 2))
+print(FeaturePlot(ZhouNormDat[[i]], features = c("AQP4","CCDC153"), pt.size = 0.2, ncol = 2))
+print(FeaturePlot(ZhouNormDat[[i]], features = c("SLC44A1","GPR17"), pt.size = 0.2, ncol = 2))
+print(FeaturePlot(ZhouNormDat[[i]], features = c("C1QB","HEXB"), pt.size = 0.2, ncol = 2))
+print(FeaturePlot(ZhouNormDat[[i]], features = c("SLC17A6","GAD1"), pt.size = 0.2, ncol = 2))
+print(FeaturePlot(ZhouNormDat[[i]], features = c("PDGFRA","MBP"), pt.size = 0.2, ncol = 2))
+dev.off()
+
+cat(paste('\n\n',i,' done normalization','\n\n',sep=''))
+
+}
+
+#save(ZhouDat,file='./SeuratObj/ZhouSamples_AllCells.rda',compress=TRUE)
+
+## used in paper:
+## load(url('https://data.nemoarchive.org/biccn/grant/u01_devhu/kriegstein/transcriptome/scell/10x_v2/human/processed/analysis/Herb_2022_Zhouthalamus/SeuratObj/ZhouSamples_AllCells.rda'))
+
+save(ZhouNormDat,file='./SeuratObj/ZhouSamples_PostSCT.rda',compress=TRUE)
+
+## used in paper:
+## load(url('https://data.nemoarchive.org/biccn/grant/u01_devhu/kriegstein/transcriptome/scell/10x_v2/human/processed/analysis/Herb_2022_Zhouthalamus/SeuratObj/ZhouSamples_PostSCT.rda'))
+
+write.csv(ZhouCellTracking,file='./SeuratObj/ZhouSamples_CellCounts.csv')
+
