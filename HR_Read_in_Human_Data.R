@@ -658,12 +658,12 @@ HSatlas.close()
 
 ## 29 yo H19.30.002
 
-10X362_3 MN
-10X362_4 MN
-10X380_5 HTHpo-HTHso
-10X380_6 HTHpo-HTHso
-10X380_7 HTHso-HTHtub
-10X380_8 HTHso-HTHtub
+# 10X362_3 MN
+# 10X362_4 MN
+# 10X380_5 HTHpo-HTHso
+# 10X380_6 HTHpo-HTHso
+# 10X380_7 HTHso-HTHtub
+# 10X380_8 HTHso-HTHtub
 
 
 test_10X362_3=HSatlas.view[:,HSatlas.ca.SampleID == '10X362_3']
@@ -688,16 +688,16 @@ loompy.create("/local/projects-t3/idea/bherb/Hypothalamus/Lein/HSatlas_10X380_8.
 
 ## 42 yo H19.30.001
 
-10X360_7 HTHma-HTHtub
-10X360_8 HTHma-HTHtub
-10X362_5 MN
-10X362_6 MN
-10X376_5 HTHpo-HTHso
-10X376_6 HTHpo-HTHso
-10X389_1 HTHma
-10X389_2 HTHma
-10X392_3 HTHso-HTHtub
-10X392_4 HTHso-HTHtub
+# 10X360_7 HTHma-HTHtub
+# 10X360_8 HTHma-HTHtub
+# 10X362_5 MN
+# 10X362_6 MN
+# 10X376_5 HTHpo-HTHso
+# 10X376_6 HTHpo-HTHso
+# 10X389_1 HTHma
+# 10X389_2 HTHma
+# 10X392_3 HTHso-HTHtub
+# 10X392_4 HTHso-HTHtub
 
 
 
@@ -735,7 +735,7 @@ loompy.create("/local/projects-t3/idea/bherb/Hypothalamus/Lein/HSatlas_10X392_4.
 ## 10X376_6 didn't work? 
 
 # 50 yo H18.30.002
- 10X190_5  HTHtub = tuberal region of HTH
+# 10X190_5  HTHtub = tuberal region of HTH
 # 10X190_6 HTHtub = tuberal region of HTH
 # 10X192_7 HTHso = supraoptic region of HTH
 # 10X192_8 HTHso = supraoptic region of HTH
