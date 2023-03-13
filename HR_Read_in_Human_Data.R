@@ -6,7 +6,7 @@ library(scDblFinder)
 library(devtools)
 library(loomR)
 
-devtools::source_url('https://github.com/brianherb/HumanHypothalamusDev/blob/main/HypoPub_functions_reference.R?raw=TRUE')
+devtools::source_url('https://github.com/brianherb/HumanHypoDev2Adult/blob/main/HR_functions_reference.R?raw=TRUE')
 
 ## Paths in these scripts mirror directories used in https://data.nemoarchive.org/biccn/grant/u01_devhu/kriegstein/transcriptome/scell/10x_v2/human/processed/analysis/Herb_2022_Hypothalamus/ We suggest that you establish a single working directory and add the following folders: Analysis, Counts, Networks, Reference_Files, SeuratObj, and TestPlots - a directory can be created in R like so: dir.create('./Counts')
 
