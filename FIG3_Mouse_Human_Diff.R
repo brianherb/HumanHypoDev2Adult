@@ -142,7 +142,7 @@ HSatlasPheno = data.frame(Sample_ID=colnames(MMHSneu_int)[HSatlasInd],Celltype =
 #Celltype = MMHSneu_int@meta.data[HSatlasInd,paste0('HSatlas_',human_clust)]
 ## get nuclei and neuron type? - predicted? 
 
-hypoMapInd = which(!is.na(MMHSneu_int@meta.data[,paste0(mouse_clust,'_named')])) ## there were a few non-neuronal either mislabeled or misclustered 
+hypoMapInd = which(!is.na(MMHSneu_int@meta.data[,paste0(mouse_clust,'_named')])) 
 hypoMapMat = MMHSneu_int@assays$integrated@scale.data[,hypoMapInd]
 hypoMapPheno = data.frame(Sample_ID=colnames(MMHSneu_int)[hypoMapInd],Celltype = MMHSneu_int@meta.data[hypoMapInd,paste0(mouse_clust,'_named')],Study_ID = "hypoMap") ## 54458 cells 
 
