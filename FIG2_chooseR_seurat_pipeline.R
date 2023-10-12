@@ -5,11 +5,6 @@ library(ggplot2)
 
 # Load Seurat object
 # Make sure this has already been normalised and that PCA has been performed
-# The data included here is the Ding, et al., Nature Biotechnology, 2020
-# human PBMC Smart-Seq data from our manuscript
-#obj <- readRDS("data/ding_smartseq_pbmc_preprocessed.rds")
-
-#obj = readRDS(url('https://data.nemoarchive.org/biccn/grant/u01_devhu/kriegstein/transcriptome/scell/10x_v2/human/processed/analysis/Herb_2022_Hypothalamus/SeuratObj/HSatlasNeuro_mt10_integrated.rds'))
 
 setwd('/local/projects-t3/idea/bherb/Hypothalamus/PubRes/Rewrite')
 
@@ -19,14 +14,12 @@ obj = readRDS('./SeuratObj/HSatlasNeuro_mt10_integrated.rds')
 # We recommend testing a broad range of resolutions
 # For more on picking the correct number of PCs, see:
 # https://satijalab.org/seurat/v3.1/pbmc3k_tutorial.html
+
 npcs <- 30
 resolutions <- c(0.01,0.1,0.2,0.5,1, 5, 10, 15, 20, 30, 40, 50,60,70,80)
 assay <- "integrated"
 reduction <- "pca"
 results_path <- "./Analysis"
-
-#DefaultAssay(obj) <- "integrated"
-#obj <- RunPCA(obj, npcs = 30, verbose = FALSE)
 
 # Run pipeline
 for (res in resolutions) {
@@ -76,8 +69,6 @@ write.csv(Embeddings(object = obj[[reduction]])[, 1:npcs],file='./Analysis/HSatl
 
 write.csv(treeTrim,file='./Analysis/tree80_L15_treeTrim.csv',row.names = FALSE)
 
-
-
 test = as.matrix(mtchs)
 
 library(cluster, quietly = TRUE)
@@ -86,9 +77,7 @@ dist.matrix <- dist(x = Embeddings(object = obj[[reduction]])[, 1:npcs])
 clusters <- treeTrim[,1]
 sil <- silhouette(x = as.numeric(x = as.factor(x = clusters)), dist = dist.matrix)
 
-
 ### end break 
-
 
   sil <- cluster::silhouette(
     x = as.numeric(as.character(unlist(clusters))),
@@ -221,12 +210,10 @@ SingleCellExperiment::reducedDim(sce, 'PCA_sub') <- SingleCellExperiment::reduce
 
 sce@colData = cbind(sce@colData,treeTrim)
 
-
 ass_prob <- bluster::bootstrapStability(sce, FUN = function(x) {
     g <- buildSNNGraph(x, use.dimred = 'PCA_sub')
     igraph::cluster_walktrap(g)$membership
   },clusters = sce$K6)
-
 
 saveRDS(ass_prob,file='./Analysis/HSatlas_neu_bootstrap_prob.rds')
 
@@ -243,9 +230,6 @@ library(viridis)
 library(ggforce)
 library(gghalves)
 library(ggridges)
-
-
-
 
 p <- ass_prob %>%
   as_tibble() %>%
