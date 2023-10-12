@@ -76,11 +76,6 @@ load('./Analysis/Fig2_Trajectories_GLOTMP_17JAN_20_20_3_k100.RData') ## loaded o
 EdKaZhouHypoNeurons = readRDS("./SeuratObj/EdKaZhouHypoNeurons.rds")
 EdKaZhouHypoNeurons@meta.data$Vertex = Pull[colnames(EdKaZhouHypoNeurons),'Vertex']
 
-## here 
-
-## mouse, human neurons 
-MMHSneu.integrated = readRDS('./SeuratObj/MusRefEdKaZhouHypoNeurons_mt10_integrated.rds')
-
 lin=monocle3:::get_principal_path(M3Seu,reduction_method = "UMAP",starting_cell = 'Y_376',end_cells = 'Y_3')$nodes
 
 slot(M3Seu, 'preprocess_aux', check=FALSE) <- SimpleList(c()) 
