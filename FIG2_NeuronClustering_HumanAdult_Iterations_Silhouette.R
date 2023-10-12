@@ -1,4 +1,4 @@
-#r4.1
+## conda environment can be created from https://github.com/brianherb/HumanHypoDev2Adult/blob/main/Hypo_R_Env.yml
 
 library(dplyr)
 library(chooseR)
@@ -14,7 +14,6 @@ seq.max <- seq_len(max(n.obs))
 mat <- t(sapply(test, "[", i = seq.max))
 mat
 }
-
 
 boot_median <- function(x, interval = 0.95, R = 25000, type = "bca") {
   # Define median to take data and indices for use with boot::
@@ -39,16 +38,15 @@ boot_median <- function(x, interval = 0.95, R = 25000, type = "bca") {
 
 setwd('/local/projects-t3/idea/bherb/Hypothalamus/PubRes/Rewrite/')
 
-#HSatlasNeuron_mt10 = readRDS('./SeuratObj/HSatlasNeuro_mt10_integrated.rds')
-
-#totCells = colnames(HSatlasNeuron_mt10)
-
-#saveRDS(totCells,'./Analysis/chooseR/HSatlasCells.rds')
+HSatlasNeuron_mt10 = readRDS('./SeuratObj/HSatlasNeuro_mt10_integrated.rds')
+totCells = colnames(HSatlasNeuron_mt10)
+saveRDS(totCells,'./Analysis/chooseR/HSatlasCells.rds')
 
 totCells = readRDS('./Analysis/chooseR/HSatlasCells.rds')
 
-#rndNames = gsub('_Cells.rds','',list.files(path='./Analysis/chooseR/',pattern='_Cells.rds'))
+## here 
 
+#rndNames = gsub('_Cells.rds','',list.files(path='./Analysis/chooseR/',pattern='_Cells.rds'))
 
 ## original tree trim 
 
@@ -285,70 +283,5 @@ K169dist = readRDS('./Analysis/chooseR/Avg_Distances_K169.rds') # zero at tail
 
 
 
-
-
-
-
-
-### Junque 
-
-resolutions = colnames(treeTrim)
-
-library(purrr)
-
-results_path = "/autofs/burnsfs/projects-t3/idea/bherb/Hypothalamus/PubRes/Rewrite/Analysis/chooseR/"
-
-scores <- purrr::map(
-  paste0(results_path, "Avg_SilhouetteScores_", resolutions, ".rds"),
-  readRDS
-)
-
-scores <- dplyr::bind_rows(scores) %>%
-  dplyr::group_by(res) %>%
-  dplyr::mutate("n_clusters" = dplyr::n()) %>%
-  dplyr::ungroup()
-meds <- scores %>%
-  dplyr::group_by(res) %>%
-  dplyr::summarise(
-    "boot" = list(boot_median(avg_sil)),
-    "n_clusters" = mean(n_clusters)
-  ) %>%
-  tidyr::unnest_wider(boot)
-
-
-
-
-
-
-
-
-
-## testing
-
-## just need to construct matrix per resolution
-
-tree1 = matrix(nrow=500,ncol=100,sample(1:12,50000,replace=TRUE))
-
-test1 = t(matrix(nrow=100,ncol=500,tree1[1,]))
-
-boo1 = tree1==test1
-
-res1 = matrix(nrow=500,ncol=100,0)
-
-res1[boo1] = 1
-
-freq1 = rowSums(res1)/100
-
-
-
-
-
-samp100 = sample(1:20,100,replace=TRUE)
-
-
-tmp = tapply(X=samp100,IND=rep(1:10,each=10),FUN=mean)
-
-
-list_sum <- Reduce("+", my_list)  
 
 
