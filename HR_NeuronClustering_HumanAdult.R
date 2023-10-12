@@ -21,7 +21,6 @@ mat <- t(sapply(test, "[", i = seq.max))
 mat
 }
 
-
 HSatlasNeuron_mt10 = readRDS('./SeuratObj/HSatlasNeuro_mt10_integrated.rds')
 
 ## what is the range? 
@@ -41,15 +40,7 @@ HSneu_sc_res=HSneu_sc_res[,order(as.numeric(gsub('integrated_snn_res.','',colnam
 
 saveRDS(HSneu_sc_res,file='./Analysis/HSneu_sc_res.rds')
 
-
-
-
-
 HSneu_sc_res = readRDS('./Analysis/HSneu_sc_res.rds')
-
-
-
-
 
 HSTF = read.csv('/local/projects-t3/idea/bherb/annotation/Hsapiens/Human_TF.csv')
 ## Hannah's assignments for old HiCat
@@ -57,49 +48,33 @@ HSTF = read.csv('/local/projects-t3/idea/bherb/annotation/Hsapiens/Human_TF.csv'
 HG_HiCat = read.csv('./Analysis/Hicat_Assignments_4FEB23.csv')
 
 
-## mrtree - similar to hypoMap approach 
-
-## multi24
-
+## try multithreading - 24 cores
 
 tree80_L15=mrtree(HSneu_sc_res[,c('integrated_snn_res.0.01','integrated_snn_res.0.1','integrated_snn_res.0.2','integrated_snn_res.0.5','integrated_snn_res.1','integrated_snn_res.5','integrated_snn_res.10','integrated_snn_res.15','integrated_snn_res.20','integrated_snn_res.30','integrated_snn_res.40','integrated_snn_res.50','integrated_snn_res.60','integrated_snn_res.70','integrated_snn_res.80')],n.cores=24)
 
 saveRDS(tree80_L15,file='./Analysis/HSatlasNeu_MRTree_15_level_res.rds')
 
 ### Identifying "true" nodes
-
 ## are at least two samples present?
-
 ## is there a minimum number of DMG's? 
-
-
-#qlogin -P "sament-lab" -l mem_free=200G -q interactive.q -pe thread 8
 
 library(future)
 plan("multicore", workers = 8)
 options(future.globals.maxSize = 180000 * 1024^2)
 
 DefaultAssay(HSatlasNeuron_mt10)='RNA'
-
 dir.create('./Analysis/tree80_L15_DEGs')
 
 ## expressed genes and no mt, RPS/RPL
 skipgenes = unique(rownames(HSatlasNeuron_mt10)[c(which(rowSums(HSatlasNeuron_mt10@assays$RNA@counts)==0),grep('^MT-',rownames(HSatlasNeuron_mt10)),grep('^MT-',rownames(HSatlasNeuron_mt10)),grep('^MT-',rownames(HSatlasNeuron_mt10)))])
 
 testgenes = setdiff(rownames(HSatlasNeuron_mt10),skipgenes)
-
 treePre=tree80_L15$labelmat.mrtree
-
 #cellbc = rownames(treeTest)
-
 treeTrim=treePre
-
 treeComment = treePre
-
 treeComment[,] = NA
-
 treeDonorStat = treePre
-
 treeDonorStat[,] = NA
 
 ## DB = Donor Bias (>80%)
@@ -110,23 +85,16 @@ treeDonorStat[,] = NA
 treeDonor = HSatlasNeuron_mt10@meta.data[rownames(treeComment),'Donor']
 
 for( i in rev(1:(ncol(treePre)-1))){
-
 HSatlasNeuron_mt10@meta.data$tmpNodes = treePre[colnames(HSatlasNeuron_mt10),i+1]
-
 HSatlasNeuron_mt10@active.ident=as.factor(HSatlasNeuron_mt10$tmpNodes)
-
 ## which are 1:1 
 childCount = tapply(X=treePre[,i+1],IND=treePre[,i],FUN=function(x){length(unique(x))})
-
 singleChild = which(childCount[as.character(treePre[,i])]==1)
-
 treeComment[singleChild,i] = "SC"
 
 ## donor bias 
 tmpDonor = tapply(X=treeDonor,IND=treePre[,i+1],FUN=function(x){any(prop.table(table(x))>0.80)})
-
 treeDonorStat[which(tmpDonor[as.character(treePre[,i+1])]),i+1] = "DB"
-
 geneTest = c(1:nrow(treePre))[-which(treeComment[,i]=="SC")]
 
 checkNodes = unique(treePre[geneTest,i])
@@ -151,7 +119,6 @@ next
 testDEG = FindMarkers(HSatlasNeuron_mt10,ident.1=names(tmpInd1),ident.2=names(tmpInd2),features=testgenes)
 
 saveRDS(testDEG,file=paste0('./Analysis/tree80_L15_DEGs/DEG_',tmpid,'.rds'))
-
 lenDEG = length(which(abs(testDEG$avg_log2FC)>=0.5 & testDEG$p_val_adj<=0.05))
 
 if(lenDEG>=10){
@@ -168,7 +135,6 @@ tmpObj = subset(HSatlasNeuron_mt10,cells=names(tmpInd))
 testDEG = FindAllMarkers(tmpObj,features=testgenes,verbose=FALSE)
 
 saveRDS(testDEG,file=paste0('./Analysis/tree80_L15_DEGs/DEG_',tmpid,'.rds'))
-
 lenDEG = length(which(abs(testDEG$avg_log2FC)>=0.5 & testDEG$p_val_adj<=0.05))
 
 if(lenDEG>=(10*length(tmpChild))){
@@ -181,56 +147,39 @@ treeComment[tmpInd,i] = "MB"
 cat(paste0('\n\n','resolution ',i,' done','\n\n'))
 } #i - each resolution
 
-
 saveRDS(treeComment,'./Analysis/tree80_L15_treeComment.rds')
-
 
 treeComment = readRDS('./Analysis/tree80_L15_treeComment.rds')
 ## only thing not considered is for nodes with more than two children I did not count the children 
-
 ### eval merging - merge MB, 
 
 treeTrim = treePre
 
 for( i in rev(1:(ncol(treePre)-1))){
-
 childCount = tapply(X=treePre[,i+1],IND=treePre[,i],FUN=function(x){length(unique(x))})
-
 tmpBranches = names(childCount)[which(childCount>1)]
-
 DBind = which(treeDonorStat[,i+1]=='DB')
-
 DBparent = unique(treePre[DBind,i])
-
 dbBranches = intersect(tmpBranches,DBparent)
 
 for(k in dbBranches){
 
 indPar = which(treePre[,i]==k)
-
 for(h in (i+1):ncol(treePre)){
-
 tmpChild = unique(treePre[indPar,h])
-
 treeTrim[which(treePre[,h]%in%tmpChild),h] = min(tmpChild)
-
 }
 }
 
 MBind = which(treeComment[,i]=='MB')
-
 mbBranches = unique(treePre[MBind,i])
 
 for(k in mbBranches){
-
 indPar = which(treePre[,i]==k)
 
 for(h in (i+1):ncol(treePre)){
-
 tmpChild = unique(treePre[indPar,h])
-
 treeTrim[which(treePre[,h]%in%tmpChild),h] = min(tmpChild)
-
 }
 }
 
