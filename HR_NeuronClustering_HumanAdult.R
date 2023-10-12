@@ -43,10 +43,6 @@ saveRDS(HSneu_sc_res,file='./Analysis/HSneu_sc_res.rds')
 HSneu_sc_res = readRDS('./Analysis/HSneu_sc_res.rds')
 
 HSTF = read.csv('/local/projects-t3/idea/bherb/annotation/Hsapiens/Human_TF.csv')
-## Hannah's assignments for old HiCat
-
-HG_HiCat = read.csv('./Analysis/Hicat_Assignments_4FEB23.csv')
-
 
 ## try multithreading - 24 cores
 
