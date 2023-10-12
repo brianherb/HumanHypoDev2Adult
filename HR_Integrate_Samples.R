@@ -39,11 +39,6 @@ load(url('https://data.nemoarchive.org/biccn/grant/u01_devhu/kriegstein/transcri
 
 load('/local/projects-t3/idea/bherb/Hypothalamus/Zhou/SeuratObj/ZhouSamples_PostSCT.rda') # ZhouNormDat
 
-## Mouse atlas 
-
-load('./SeuratObj/Ref2Samples_PostSCT.rda') #Ref2NormDat
-
-load('/local/projects-t3/idea/bherb/Hypothalamus/PubRes/SeuratObj/RefSamples_PostSCT.rda') #RefNormDat
 
 ############################################
 ### Integrate CS13 - GW25, all cells    ####
@@ -215,154 +210,20 @@ PrintColCont = c('nCount_RNA','nFeature_RNA','percent.mt','GAD1','GAD2','SLC17A6
 
 KaZhouAll_mt10 = readRDS('./SeuratObj/KaZhouAll_mt10_integrated.rds')
 
-
-##############################################
-### Mouse pub data 				  		  ####
-##############################################
-
-names(RefNormDat) = gsub('_','-',names(RefNormDat))
-names(RefNormDat) = gsub('.','-',names(RefNormDat),fixed=TRUE)
-
-
-for(i in names(RefNormDat)){
-	RefNormDat[[i]]@meta.data$Study = flexsplit(i,'-')[1]
-}
-
-for(i in names(Ref2NormDat)){
-	Ref2NormDat[[i]]@meta.data$Study = flexsplit(i,'-')[1]
-}
-
-combDat = c(RefNormDat,Ref2NormDat)
-
-IntName = 'MouseRefAll_mt10'  
-PrintColCat = c('sample','Study','seurat_clusters') 
-PrintColCont = c('nCount_RNA','nFeature_RNA','percent.mt','GAD1','GAD2','SLC17A6')
-
-## neurons marked by GAD2 and SLC17A6 are in clusters - 1,2,5,6,7,11,12,13,15,16,21,23,25,28
-
-MouseRefAll.integrated =readRDS('./SeuratObj/MouseRefAll_mt10_integrated.rds')
-
-exInd = unique(which(is.na(match(MouseRefAll.integrated@meta.data$seurat_clusters,c(0,3,4,8,9,10,14,17,18,19,20,22,24,26,27,29,30,31))))) # #  137483 neurons in c(1,2,5,6,7,11,12,13,15,16,21,23,25,28)
-
-MouseRefAllNeuronBarcodes_mt10 = colnames(MouseRefAll.integrated)[exInd] 
-
-save(MouseRefAllNeuronBarcodes_mt10,file='./SeuratObj/MouseRefAllNeuronBarcodes_mt10.rda',compress=TRUE) 
-
-##############################################
-### Mouse and Human neurons 	  		  ####
-##############################################
-
-## Mouse References 
-combDatMMsc = c(RefNormDat,Ref2NormDat)
-
-for(i in names(combDatMMsc)){
-	tmpcells = intersect(colnames(combDatMMsc[[i]]),MouseRefAllNeuronBarcodes_mt10)
-if(length(tmpcells)>0){
-combDatMMsc[[i]] = subset(combDatMMsc[[i]],cells=tmpcells)
-} else {
-combDatMMsc[[i]] = NA
-}
-cat(paste(i,', ',sep=''))
-}
-
-
-naInd=which(is.na(combDatMMsc))
-
-combDatMMsc = combDatMMsc[-naInd] # Black-E15L
-
-for(i in names(combDatKA)){
-combDatKA[[i]]$study='DevHuKa'
-}
-
-for(i in names(combDatZhou)){
-combDatZhou[[i]]$study='DevHuZhou'
-}
-
-for(i in names(combDatEd)){
-combDatEd[[i]]$study='AdultHu'
-}
-
-## remove NA cells from Lein samples 
-
-## cells Hannah deamed as Nucleus accumbens 
-
-NAcells = read.csv("./Analysis/NACBarcs.csv")
-
-
-combDat = c( combDatMMsc, combDatKA,combDatZhou,combDatEd) #combDatLow,
-
-for(i in names(combDat)){
-if(any(colnames(combDat[[i]])%in%NAcells$X)){
-combDat[[i]] = subset(combDat[[i]],cells=setdiff(colnames(combDat[[i]]),NAcells$X))
-}
-cat(paste(i,', ',sep=''))
-}
-
-for(i in c(1:length(combDat))){
-	if(i==1){
-totsum=ncol(combDat[[i]]) 
-} else {
-totsum=totsum + ncol(combDat[[i]]) 
-	}
-}
-
-
-
-IntName = 'MusRefEdKaZhouHypoNeurons_mt10'  
-PrintColCat = c('study','seurat_clusters') 
-PrintColCont = c('nCount_RNA','nFeature_RNA','percent.mt','GAD1','GAD2','SLC17A6','POMC')
-
-
-## calc per mt for 
-
+## calc per mt
 for(i in 1:length(combDat)){
-
 combDat[[i]] <- PercentageFeatureSet(combDat[[i]], pattern = "^MT-", col.name = "percent.mt")
-
-}
-
-##############################################
-### Mouse and Human POMC neurons 		  ####
-##############################################
-
-#####  based on Hannah's assignments from cluster 13 
-
-
-HG_POMCneurons = read.csv('./Analysis/Hannah-POMCAssignments_2_7_23.csv',row.names=1)
-
-combDat = c( combDatMMsc, combDatKA,combDatZhou,combDatEd)
-
-for(i in names(combDat)){
-	tmpcells = intersect(colnames(combDat[[i]]),HG_POMCneurons[,1])
-if(length(tmpcells)>0){
-combDat[[i]] = subset(combDat[[i]],cells=tmpcells)
-} else {
-combDat[[i]] = NA
-}
-cat(paste(i,', ',sep=''))
 }
 
 
-naInd=which(is.na(combDat))
-
-combDat = combDat[-naInd] # Black-E15L
-
-#combDat = c(combDat,combDatLow)
-
-
-IntName = 'Hannah_MMHSpomcNeurons_mt10'  
-PrintColCat = c('study','seurat_clusters') 
-PrintColCont = c('nCount_RNA','nFeature_RNA','percent.mt','GAD1','GAD2','SLC17A6','POMC')
-
-
 ##############################################
-### Integrate Ctx GE Hypo 				  ####
+### Integrate Ctx GE Hypo 		  ####
 ##############################################
 
 ## Done in Fig4_HumanHypoCtxGE.R 
 
 ############################################
-### Common code for integration 	    ####
+### Common code for integration 	####
 ############################################
 
 ## count cells 
