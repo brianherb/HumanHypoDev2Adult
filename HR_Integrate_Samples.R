@@ -21,8 +21,6 @@ load(url('https://data.nemoarchive.org/biccn/grant/u01_devhu/kriegstein/transcri
 
 load('/local/projects-t3/idea/bherb/Hypothalamus/PubRes/Rewrite/SeuratObj/HypoSamples_PostSCT.rda') 
 
-
-
 ## Non-hypothalamus Human Embryonic samples 
 
 ## GW18 Cortex
@@ -40,11 +38,6 @@ load(url('https://data.nemoarchive.org/biccn/grant/u01_devhu/kriegstein/transcri
 ## Zhou data 
 
 load('/local/projects-t3/idea/bherb/Hypothalamus/Zhou/SeuratObj/ZhouSamples_PostSCT.rda') # ZhouNormDat
-
-
-## Low study of POMC neurons 
-load('./SeuratObj/Low_samples_PostSCT.rda')
-
 
 ## Mouse atlas 
 
