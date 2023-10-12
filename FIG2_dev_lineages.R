@@ -1,7 +1,6 @@
 library(Seurat)
 library(BiocGenerics)
 library(S4Vectors)
-
 library(plotly)
 library(htmlwidgets)
 library("rmarkdown")
@@ -21,9 +20,6 @@ library(circlize)
 library(RColorBrewer)
 
 setwd('/local/projects-t3/idea/bherb/Hypothalamus/PubRes/Rewrite/')
-
-
-
 
 flexsplit <- function(dat,char){
 test=strsplit(as.character(dat),char,fixed=TRUE)
@@ -52,8 +48,6 @@ colnames(MM2HSref) = c('MM_ID','MM_Gene','HS_ID','HS_Gene')
 HS2MMref = read.csv('/local/projects-t3/idea/bherb/annotation/HS2MM_EG100.csv')
 colnames(HS2MMref) = c('HS_ID','HS_Gene','MM_ID','MM_Gene')
 
-
-
 HStoMM <- function(x){
     tmpind = match(as.character(x),HS2MMref$HS_Gene)
 return(as.character(HS2MMref$MM_Gene[tmpind]))
@@ -77,7 +71,6 @@ for(i in 1:ncol(TF_NP)){
     TF_NP[,i] = MMtoHS(TF_NP[,i])
 } ## human convention 
 
-
 NPlist2 = unique(c(na.omit(as.character(TF_NP$Neuropeptides)),NPlist))
 
 ## Load monocle lineages and nodes - 
@@ -88,29 +81,24 @@ load('./Analysis/Fig2_Trajectories_GLOTMP_17JAN_20_20_3_k100.RData') ## loaded o
 
 ## human neurons
 
-EdKaZhouHypoNeurons = readRDS("./SeuratObj/EdKaZhouHypoNeurons_mt10_integrated.rds")
-
+EdKaZhouHypoNeurons = readRDS("./SeuratObj/EdKaZhouHypoNeurons.rds")
 
 EdKaZhouHypoNeurons@meta.data$Vertex = Pull[colnames(EdKaZhouHypoNeurons),'Vertex']
+
+## here 
 
 ## mouse, human neurons 
 MMHSneu.integrated = readRDS('./SeuratObj/MusRefEdKaZhouHypoNeurons_mt10_integrated.rds')
 
-
 lin=monocle3:::get_principal_path(M3Seu,reduction_method = "UMAP",starting_cell = 'Y_376',end_cells = 'Y_3')$nodes
 
-
-
 slot(M3Seu, 'preprocess_aux', check=FALSE) <- SimpleList(c())  ##fix 
-
 
 ## get vertex labels for reference
 
 pdf('./TestPlots/Hannah_July2023_neuron_lineage.pdf',width=12,height=8)
 plot(net.NODE,layout=lrt.NODE,vertex.label.cex=0.5)
 dev.off()
-
-
 
 ind = which(EdKaZhouHypoNeurons@meta.data$Vertex%in%nodesNODE$id)
 
