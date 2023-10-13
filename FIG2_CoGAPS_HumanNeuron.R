@@ -34,7 +34,7 @@ params <- setDistributedParams(params, nSets=1)
 
 xxCoGAPS <- CoGAPS(data=TMPdat,params=params,geneNames=genes,sampleNames=cells,messages=TRUE,transposeData=FALSE,nPatterns=15,nIterations=10000,nThreads=16)
 
-save(xxCoGAPS,file='./Analysis/HSatlas_CoGAPS_15Pat_10KIter_Interactive.rda')
+save(xxCoGAPS,file='./Analysis/HumanNeu_CoGAPS_15Pat_10KIter_Interactive.rda')
 
 ### plotting 
 
