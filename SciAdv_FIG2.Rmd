@@ -198,7 +198,7 @@ for(x in colnames(Resolutions)){
   EdKaZhouHypoNeurons = AddMetaData(EdKaZhouHypoNeurons, PullMeta, x)  
 }
 
-Adult_Annots = read.csv("~/AllHumanAnnots_ByCell.csv")
+Adult_Annots = read.csv("~/AllHumanAnnots_ByCell_12JUL23.csv")
 IterativeAnalysis = merge(Adult_Annots, Resolutions, by = "K560")
 
 PullK116Nuclei = IterativeAnalysis %>% dplyr::select("K_116Nuclei")
@@ -321,7 +321,6 @@ dev.off()
 ##### GENERATE ALLUVIAL PLOTS MULTI LEVELS ####
 ###############################################
 ```{r}
-MultiKAnnot = read.csv("~/MultiKAnnot_Annotations.csv")
 
 Alluvial_Nuclei = Adult_Annots %>% dplyr::select("K6Nuclei", "K55Nuclei", "K_116Nuclei", "Nuclei_K560")
 Alluvial_Nuclei$x = 1
