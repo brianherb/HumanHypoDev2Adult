@@ -211,7 +211,7 @@ dev.off()
 ################## CLUSTERING ################# 
 ###############################################
 ```{r FIG-1-CLUST}
-KaZhouAll = readRDS("~/KaZhouAll_mt10_integrated.rds")
+KaZhouAll = readRDS("~/KaZhouAll.rds")
 
 set.dim = 30
 set.res = 1
